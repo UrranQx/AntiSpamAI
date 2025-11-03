@@ -12,6 +12,7 @@
     CNN+LSTM: Accuracy=98.49%, F1=97.72%
 """
 
+import os
 import torch
 import numpy as np
 from data_loader import load_emails, EmailDataset
@@ -37,8 +38,14 @@ class SpamClassifierPredictor:
         self.vocab = None
         self.vocab_size = None
 
-    def load_model(self, texts_for_vocab):
-        """Загрузка модели и построение словаря"""
+    def load_model(self, texts_for_vocab, use_full_model=False):
+        """Загрузка модели и построение словаря
+
+        Args:
+            texts_for_vocab: Тексты для построения словаря
+            use_full_model: Если True, загружает полную модель с гиперпараметрами
+                          Если False, использует state_dict с вручную заданными параметрами
+        """
         print(f"\n{'='*60}")
         print(f"ЗАГРУЗКА МОДЕЛИ: {self.model_type.upper()}")
         print(f"{'='*60}")
@@ -50,38 +57,86 @@ class SpamClassifierPredictor:
         self.vocab_size = len(self.vocab)
         print(f"✓ Размер словаря: {self.vocab_size} слов")
 
-        # Инициализация модели с ТОЧНЫМИ параметрами из обучения
-        if self.model_type == 'cnn_lstm':
-            self.model = CNNLSTMSpamClassifier(
-                vocab_size=self.vocab_size,
-                embedding_dim=128,      # Совпадает с test_cnn_lstm.py
-                num_filters=256,        # Совпадает с test_cnn_lstm.py
-                filter_sizes=[3, 4, 5],
-                lstm_hidden=256,        # Совпадает с test_cnn_lstm.py
-                dropout=0.5             # Совпадает с test_cnn_lstm.py
-            )
-        elif self.model_type == 'bilstm':
-            self.model = BiLSTMSpamClassifier(
-                vocab_size=self.vocab_size,
-                embedding_dim=100,
-                hidden_dim=128,
-                num_layers=1,
-                dropout=0.3
-            )
-        elif self.model_type == 'cnn_1d':
-            self.model = CNN1DSpamClassifier(
-                vocab_size=self.vocab_size,
-                embedding_dim=100,
-                num_filters=64,
-                filter_sizes=[3, 4, 5],
-                dropout=0.3
-            )
-        else:
-            raise ValueError(f"Неизвестный тип модели: {self.model_type}")
+        # Проверяем, можем ли мы загрузить полную модель
+        if use_full_model:
+            full_model_path = self.model_path.replace('.pth', '_full.pth')
+            if os.path.exists(full_model_path):
+                print(f"Загрузка полной модели из {full_model_path}...")
+                checkpoint = torch.load(full_model_path, map_location=self.device)
 
-        # Загрузка весов
-        print(f"Загрузка весов из {self.model_path}...")
-        self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
+                # Извлекаем гиперпараметры
+                hyperparams = checkpoint['hyperparameters']
+                print(f"✓ Гиперпараметры из сохраненной модели:")
+                for key, value in hyperparams.items():
+                    print(f"  - {key}: {value}")
+
+                # Создаем модель с сохраненными гиперпараметрами
+                if self.model_type == 'cnn_lstm':
+                    self.model = CNNLSTMSpamClassifier(
+                        vocab_size=self.vocab_size,
+                        **hyperparams
+                    )
+                elif self.model_type == 'bilstm':
+                    self.model = BiLSTMSpamClassifier(
+                        vocab_size=self.vocab_size,
+                        **hyperparams
+                    )
+                elif self.model_type == 'cnn_1d':
+                    self.model = CNN1DSpamClassifier(
+                        vocab_size=self.vocab_size,
+                        **hyperparams
+                    )
+
+                # Загружаем веса
+                self.model.load_state_dict(checkpoint['model_state_dict'])
+
+                # Показываем информацию об обучении
+                if 'training_info' in checkpoint:
+                    info = checkpoint['training_info']
+                    print(f"✓ Информация об обучении:")
+                    print(f"  - Эпоха: {info['epoch']}")
+                    print(f"  - Accuracy: {info['accuracy']*100:.2f}%")
+                    print(f"  - F1-Score: {info['f1']*100:.2f}%")
+            else:
+                print(f"⚠ Полная модель не найдена: {full_model_path}")
+                print(f"Переход к загрузке state_dict...")
+                use_full_model = False
+
+        if not use_full_model:
+            # Инициализация модели с ТОЧНЫМИ параметрами из обучения
+            print(f"Загрузка state_dict с вручную заданными параметрами...")
+            if self.model_type == 'cnn_lstm':
+                self.model = CNNLSTMSpamClassifier(
+                    vocab_size=self.vocab_size,
+                    embedding_dim=128,      # Совпадает с test_cnn_lstm.py
+                    num_filters=256,        # Совпадает с test_cnn_lstm.py
+                    filter_sizes=[3, 4, 5],
+                    lstm_hidden=256,        # Совпадает с test_cnn_lstm.py
+                    dropout=0.5             # Совпадает с test_cnn_lstm.py
+                )
+            elif self.model_type == 'bilstm':
+                self.model = BiLSTMSpamClassifier(
+                    vocab_size=self.vocab_size,
+                    embedding_dim=128,
+                    hidden_dim=64,
+                    num_layers=2,
+                    dropout=0.5
+                )
+            elif self.model_type == 'cnn_1d':
+                self.model = CNN1DSpamClassifier(
+                    vocab_size=self.vocab_size,
+                    embedding_dim=128,
+                    num_filters=100,
+                    filter_sizes=[3, 4, 5],
+                    dropout=0.5
+                )
+            else:
+                raise ValueError(f"Неизвестный тип модели: {self.model_type}")
+
+            # Загрузка весов
+            print(f"Загрузка весов из {self.model_path}...")
+            self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
+
         self.model.to(self.device)
         self.model.eval()
         print(f"✓ Модель загружена на {self.device}")
@@ -319,7 +374,9 @@ def main():
         model_type='cnn_lstm',
         max_len=1604  # ВАЖНО: совпадает с test_cnn_lstm.py
     )
-    predictor.load_model(X_train)
+    # use_full_model=True автоматически загрузит гиперпараметры из _full.pth
+    # Если файл не найден, автоматически переключится на state_dict
+    predictor.load_model(X_train, use_full_model=True)
 
     # Тестирование
     print("[4/4] Тестирование модели...")

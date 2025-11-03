@@ -209,8 +209,37 @@ if __name__ == "__main__":
         if accuracy > best_accuracy:
             best_accuracy = accuracy
             best_f1 = f1
+
+            # Сохранение модели в трех форматах
+            # 1. State dict (только веса - самый легкий)
             torch.save(model.state_dict(), 'best_bilstm_model.pth')
-            print(f"  ✓ Модель сохранена! (best accuracy: {accuracy:.4f})")
+
+            # 2. Полная модель с гиперпараметрами
+            torch.save({
+                'model_state_dict': model.state_dict(),
+                'model': model,
+                'vocab_size': vocab_size,
+                'max_len': MAX_LEN,
+                'hyperparameters': {
+                    'embedding_dim': EMBEDDING_DIM,
+                    'hidden_dim': HIDDEN_DIM,
+                    'num_layers': NUM_LAYERS,
+                    'dropout': DROPOUT
+                },
+                'training_info': {
+                    'epoch': epoch + 1,
+                    'accuracy': accuracy,
+                    'f1': f1,
+                    'precision': precision,
+                    'recall': recall
+                }
+            }, 'best_bilstm_full.pth')
+
+
+            print(f"  ✓ Модель сохранена в 2 форматах:")
+            print(f"    - best_bilstm_model.pth (state_dict)")
+            print(f"    - best_bilstm_full.pth (полная модель)")
+            print(f"    (best accuracy: {accuracy:.4f})")
 
     # Финальная оценка
     print("\n" + "=" * 50)
