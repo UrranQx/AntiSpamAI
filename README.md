@@ -7,7 +7,15 @@
 **Лучший результат:** CNN+LSTM архитектура с точностью **98.49%** и F1-Score **97.72%**
 
 ---
-
+## Другие результаты
+### RANDOM FOREST
+![random_forest_confusion_matrix.png](test_models/random_forest_confusion_matrix.png)
+### CNN1D
+![cnn1d_confusion_matrix.png](test_models/cnn1d_confusion_matrix.png)
+### Bidirectional LSTM
+![bilstm_confusion_matrix.png](test_models/bilstm_confusion_matrix.png)
+### CNN+LSTM
+![cnn_lstm_confusion_matrix.png](test_models/cnn_lstm_confusion_matrix.png)
 ## 🎯 Результаты модели
 
 | Метрика | Значение |
