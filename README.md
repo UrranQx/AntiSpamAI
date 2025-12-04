@@ -16,7 +16,7 @@
 ![bilstm_confusion_matrix.png](test_models/bilstm_confusion_matrix.png)
 ### CNN+LSTM
 ![cnn_lstm_confusion_matrix.png](test_models/cnn_lstm_confusion_matrix.png)
-## 🎯 Результаты модели
+## Результаты модели
 
 | Метрика | Значение |
 |---------|----------|
@@ -33,53 +33,8 @@
 
 ---
 
-## 🏗️ Архитектура модели
 
-**Гибридная CNN+LSTM модель:**
-
-```
-Input Text (до 1604 токенов)
-    ↓
-Embedding Layer (128-dim)
-    ↓
-CNN Layers (3 параллельных свертки: 3-gram, 4-gram, 5-gram)
-    ↓
-Concatenation (768 признаков)
-    ↓
-Bidirectional LSTM (256 hidden units)
-    ↓
-Dense Layers
-    ↓
-Output (Ham/Spam + вероятности)
-```
-
-### Гиперпараметры:
-- **MAX_LEN**: 1604 токенов
-- **EMBEDDING_DIM**: 128
-- **NUM_FILTERS**: 256
-- **LSTM_HIDDEN**: 256 (BiLSTM → 512)
-- **DROPOUT**: 0.5
-
----
-
-## 📦 Требования
-
-```bash
-torch>=2.0.0
-numpy>=1.24.0
-scikit-learn>=1.3.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-```
-
-Установка:
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 🚀 Быстрый старт
+## Крч, как использовать 
 
 ### 1. Загрузка модели и предсказание
 
@@ -127,7 +82,7 @@ python main.py
 
 ---
 
-## 🔌 API для интеграции
+## Если мы в дальнейшем хотим объединять с другими моделями
 
 ### Класс `SpamClassifierPredictor`
 
@@ -145,7 +100,7 @@ predictor.load_model(training_texts)
 
 **`predict(text: str) -> dict`**
 
-Классифицирует один текст.
+Классифицирует один какой-то конкретный текст.
 
 **Вход:**
 - `text` (str): текст письма
@@ -200,9 +155,7 @@ results = predictor.predict_batch(texts)
 
 ---
 
-## 🔗 Интеграция с моделью метаданных
-
-Для объединения с моделью классификации метаданных рекомендуется:
+## способы объеднэинения с другими нейронками 
 
 ### Вариант 1: Ансамбль (голосование)
 
@@ -250,114 +203,17 @@ final_prediction = final_classifier.predict([features])
 
 ---
 
-## 📁 Структура проекта
 
-```
-AntiSpamAI/
-├── main.py                      # Главный скрипт с API
-├── data_loader.py               # Загрузка и обработка данных
-├── requirements.txt             # Зависимости
-├── MODEL_PARAMS.md              # Подробные параметры моделей
-│
-├── models/                      # Архитектуры моделей
-│   ├── cnn_lstm.py             # CNN+LSTM (лучшая модель)
-│   ├── bilstm.py               # Bidirectional LSTM
-│   ├── cnn_1d.py               # 1D CNN
-│   └── random_forest.py        # Random Forest (baseline)
-│
-├── test_models/                 # Обученные модели и тесты
-│   ├── best_cnn_lstm_model.pth # ⭐ State dict (только веса)
-│   ├── best_cnn_lstm_full.pth  # ⭐ Полная модель + гиперпараметры
-│   ├── test_cnn_lstm.py        # Скрипт обучения CNN+LSTM
-│   ├── test_bilstm.py          # Скрипт обучения BiLSTM
-│   └── test_cnn1d.py           # Скрипт обучения CNN1D
-│
-└── data/
-    └── extracted/
-        └── body/                # Текстовое содержимое писем
-            ├── easy_ham_*.txt
-            ├── hard_ham_*.txt
-            └── spam_2_*.txt
-```
-
----
-
-## 💾 Форматы сохранения моделей
-
-Каждая обученная модель сохраняется в **трех форматах**:
-
-### 1️⃣ State Dict (`.pth`) - Только веса
-
-**Размер:** Минимальный (~5-10 МБ)  
-**Требования:** Исходный код архитектуры модели  
-**Файлы:** `best_*_model.pth`
-
-```python
-# Загрузка
-model = CNNLSTMSpamClassifier(vocab_size, embedding_dim=128, ...)
-model.load_state_dict(torch.load('best_cnn_lstm_model.pth'))
-```
-
-**Плюсы:** Минимальный размер файла  
-**Минусы:** Нужно вручную указывать все гиперпараметры
-
----
-
-### 2️⃣ Полная модель (`.pth`) - Веса + гиперпараметры + метаданные
-
-**Размер:** Средний (~10-15 МБ)  
-**Требования:** Исходный код класса модели  
-**Файлы:** `best_*_full.pth`
-
-```python
-# Загрузка
-checkpoint = torch.load('best_cnn_lstm_full.pth')
-model = CNNLSTMSpamClassifier(
-    vocab_size=vocab_size, 
-    **checkpoint['hyperparameters']
-)
-model.load_state_dict(checkpoint['model_state_dict'])
-
-# Также содержит информацию об обучении
-print(f"Эпоха: {checkpoint['training_info']['epoch']}")
-print(f"Accuracy: {checkpoint['training_info']['accuracy']}")
-```
-
-**Плюсы:**
-- Автоматически загружает все параметры
-- Содержит метаданные об обучении (эпоха, метрики)
-
-**Минусы:** Требует наличия класса модели при загрузке
-
----
-
-## 🔧 Переобучение модели
-
-Если нужно переобучить модель на новых данных:
-
-```bash
-cd test_models
-python test_cnn_lstm.py
-```
-
-Параметры можно изменить в начале файла `test_cnn_lstm.py`.
-
----
-
-## ⚠️ Важные замечания
+## Важные уточнения
 
 1. **Словарь (vocab)**: Модель требует построения словаря на тренировочных данных. При интеграции используйте те же данные для построения словаря, что и при обучении.
 
 2. **Длина последовательности**: Модель обучена на последовательностях длиной **1604 токена**. Более длинные тексты обрезаются, короткие - дополняются padding.
 
 3. **Гиперпараметры**: При загрузке модели **критически важно** использовать те же гиперпараметры, что и при обучении. См. `MODEL_PARAMS.md`.
-
-4. **Производительность**: Предсказание одного письма занимает ~10-50ms на CPU, ~2-5ms на GPU.
-
 ---
 
-## 📊 Датасет
-
+## коротко о латасете
 **Источник**: Ham/Spam Email Dataset
 
 **Статистика:**
@@ -379,18 +235,3 @@ python test_cnn_lstm.py
 
 
 
-
-
-  
-## 📚 Дополнительные ресурсы
-  
-- **[MODEL_FORMATS.md](MODEL_FORMATS.md)** - 
-- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** - 
-- **[MODEL_PARAMS.md](MODEL_PARAMS.md)** -  
-- **[test_models/demo_load_formats.py](test_models/demo_load_formats.py)** -  
-  
----  
-  
-##  License
-  
-MIT License 
