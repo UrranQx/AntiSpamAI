@@ -1,6 +1,6 @@
 # AntiSpam AI - Классификация спама по содержимому писем
 
-## 📋 Описание
+## Описание 
 
 Модель нейронной сети для классификации email-сообщений на **HAM** (обычные письма) и **SPAM** на основе текстового содержимого письма.
 
@@ -26,10 +26,10 @@
 | **F1-Score** | 97.72% |
 
 ### Матрица ошибок:
-- True Negatives (Ham → Ham): **833**
-- False Positives (Ham → Spam): **8**
-- False Negatives (Spam → Ham): **11**
-- True Positives (Spam → Spam): **408**
+- True Negatives (Ham -> Ham): **833**
+- False Positives (Ham -> Spam): **8**
+- False Negatives (Spam -> Ham): **11**
+- True Positives (Spam -> Spam): **408**
 
 ---
 
