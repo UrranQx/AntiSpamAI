@@ -7,7 +7,7 @@
 **Лучший результат:** CNN+LSTM архитектура с точностью **98.65%** и F1-Score **97.98%**
 
 ---
-## Другие результаты
+## Все результаты
 ### RANDOM FOREST
 ![random_forest_confusion_matrix.png](test_models/random_forest_confusion_matrix.png)
 ### CNN1D
