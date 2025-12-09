@@ -86,17 +86,17 @@
 predictor = SpamClassifierPredictor(
     model_path="test_models/best_cnn_lstm_model.pth",
     model_type='cnn_lstm',
-    max_len=1604  # ← Из test_cnn_lstm.py
+    max_len=1604  #  Из test_cnn_lstm.py
 )
 
 # В load_model:
 model = CNNLSTMSpamClassifier(
     vocab_size=vocab_size,
-    embedding_dim=128,      # ← Из test_cnn_lstm.py
-    num_filters=256,        # ← Из test_cnn_lstm.py
+    embedding_dim=128,      #  Из test_cnn_lstm.py
+    num_filters=256,        #  Из test_cnn_lstm.py
     filter_sizes=[3, 4, 5],
-    lstm_hidden=256,        # ← Из test_cnn_lstm.py
-    dropout=0.5             # ← Из test_cnn_lstm.py
+    lstm_hidden=256,        #  Из test_cnn_lstm.py
+    dropout=0.5             #  Из test_cnn_lstm.py
 )
 ```
 
